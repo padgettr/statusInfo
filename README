@@ -1,0 +1,66 @@
+About
+-----
+
+Yet another status bar info generator.
+
+Uses libnl for wifi monitoring, alsalib for sound control monitor and udev
+for system subsystem monitoring.
+
+Works with:
+   wayland dwlb (not tested for a long time)
+   Xorg direct output to root window name field (for dwm)
+   text output for other status bars or console (e.g. tmux)
+   
+Usage:
+   statusInfo <-t || socket number of dwlb>
+      If dwlb socket number is given, status info is written to the specified
+      dwlb socket
+      If dwlb socket number is not given (i.e. no args given), status info is
+      written to xorg root window name (for dwm)
+      If X display not found or -t is given, status info is written out as
+      text (for sway or tmux)
+      Use --help to display some help
+
+To build (requires libasound, libnl3 libudev; tested on archlinux December 2024):
+WARNING: this code has not been optimised! Use at your own risk.
+
+1. Edit config.h to suit your system
+2. Compile with:
+      gcc -Wall -I/usr/include/libnl3 statusInfo-v7-udev.c -lnl-genl-3 -lnl-3 -lX11 -ludev -lasound -o statusInfo
+
+
+Example tmux config
+-------------------
+Add the followint to .tmux.conf:
+
+set-option -g status on
+set-option -g status-interval 10
+set-option -g status-justify centre
+set-option -g status-keys vi
+set-option -g status-position bottom
+set-option -g status-style fg=colour136,bg=colour235
+set-option -g status-left-length 20
+set-option -g status-left-style default
+set-option -g status-left "#[fg=colour5]#H #[fg=black]"
+set-option -g status-right-length 140
+set-option -g status-right-style default
+set-option -g status-right "#[fg=white,bg=default]#(/usr/local/bin/statusInfo) "
+set-window-option -g window-status-style fg=colour244
+set-window-option -g window-status-style bg=default
+set-window-option -g window-status-current-style fg=colour166
+set-window-option -g window-status-current-style bg=default
+
+WARNING: pipewire setup
+-----------------------
+Sound servers that do not start at boot (e.g. socket activated) need to be running when the
+statusInfo is started - once started any new alsa mixer controls added by such sound servers
+will not be checked for. So if the default mixer control is pipewire, mixer element will not be
+found unless pipewire is running. If pipewire isn't running on login:
+Use:
+systemctl --user enable pipewire
+
+to start pipewire on login.
+
+This will:
+Create symlink /home/<USER>/.config/systemd/user/default.target.wants/pipewire.service -> /usr/lib/systemd/user/pipewire.service.
+Create symlink /home/<USER>/.config/systemd/user/sockets.target.wants/pipewire.socket -> /usr/lib/systemd/user/pipewire.socket.
